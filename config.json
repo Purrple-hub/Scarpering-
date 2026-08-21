@@ -1,0 +1,33 @@
+{
+  "seed_urls": ["https://example.com"],
+  "max_depth": 3,
+  "max_pages": 500,
+  "concurrency": 0,
+  "timeout": 15.0,
+  "retries": 3,
+  "backoff_factor": 0.5,
+  "base_delay": 0.1,
+  "output_dir": "crawled_data",
+  "output_formats": ["jsonl", "sqlite"],
+  "follow_external": false,
+  "max_page_size": 5242880,
+  "enable_dedup": true,
+  "near_dup_threshold": 0.85,
+  "simhash_bits": 64,
+  "minhash_perms": 128,
+  "minhash_bands": 16,
+  "lsh_max_docs": 5000,
+  "use_proxy": false,
+  "proxy_sources": [
+    "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
+    "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
+    "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt"
+  ],
+  "ssl_verify": false,
+  "batch_size": 50,
+  "gc_interval": 100,
+  "memory_limit_mb": 1024,
+  "zip_extract": true,
+  "log_file": "crawler.log",
+  "use_sitemap": true
+}
