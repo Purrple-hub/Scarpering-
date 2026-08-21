@@ -36,7 +36,7 @@ No headless browser required — it's fast, lightweight, and ready for academic 
 ### Manual install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Purrple-hub/Scarpering-
 cd webcrawler
 pip install -r requirements.txt
 
