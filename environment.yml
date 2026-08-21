@@ -1,0 +1,16 @@
+name: scarpering-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - PyQt6
+      - curl-cffi
+      - selectolax
+      - aiofiles
+      - aiosqlite
+      - psutil
+      - pytest>=7.0
+      - flake8>=6.0
