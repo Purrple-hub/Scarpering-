@@ -1,60 +1,69 @@
-from __future__ import annotations
+#!/usr/bin/env python3
+"""
+Scarpering - Main entry point.
+"""
 
 import argparse
 import asyncio
+import json
 import sys
+from pathlib import Path
 
-from crawler.package_manager import ensure_dependencies
+# Add this to ensure the current directory is on the path (if running from source)
+# But the proper way is to install the package.
+from crawler.crawler import UnifiedAsyncCrawler
+from crawler.settings import Settings
+from crawler.storage import StorageManager
 
-ensure_dependencies()
-
-from crawler.settings import Settings  # noqa: E402
-from crawler.signals import SignalBridge  # noqa: E402
-
-
-def run_headless(settings: Settings) -> None:
-    from crawler.crawler import UnifiedAsyncCrawler
-
-    bridge = SignalBridge()
-    crawler = UnifiedAsyncCrawler(settings, bridge)
-    asyncio.run(crawler.crawl())
-
-
-def run_gui(settings: Settings) -> None:
-    from PyQt6.QtWidgets import QApplication
-
+# If you have GUI code:
+try:
     from gui.main_window import MainWindow
-
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.settings = settings
-    window.show()
-    sys.exit(app.exec())
+    from PyQt6.QtWidgets import QApplication
+    GUI_AVAILABLE = True
+except ImportError:
+    GUI_AVAILABLE = False
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Advanced async web crawler")
-    parser.add_argument("--headless", action="store_true", help="Run without GUI")
-    parser.add_argument("--config", type=str, help="Path to JSON config file")
-    parser.add_argument("--url", nargs="+", help="Seed URL(s)")
-    parser.add_argument("--max-pages", type=int, help="Max pages to crawl")
-    parser.add_argument("--output-dir", type=str, help="Output directory")
+def main():
+    """Parse arguments and run the crawler."""
+    parser = argparse.ArgumentParser(description="Scarpering Web Crawler")
+    parser.add_argument("--config", "-c", type=str, help="Path to JSON config file")
+    parser.add_argument("--headless", "-H", action="store_true", help="Run in headless (CLI) mode")
+    parser.add_argument("--gui", "-g", action="store_true", help="Launch GUI (if available)")
+    parser.add_argument("--url", "-u", type=str, help="Seed URL to start crawling")
+    parser.add_argument("--output", "-o", type=str, default="./output", help="Output directory")
     args = parser.parse_args()
 
-    settings = Settings.from_config(args.config)
-    if args.url:
-        settings.seed_urls = args.url
-    if args.max_pages:
-        settings.max_pages = args.max_pages
-    if args.output_dir:
-        settings.output_dir = args.output_dir
+    if args.gui and GUI_AVAILABLE:
+        app = QApplication(sys.argv)
+        window = MainWindow()
+        window.show()
+        sys.exit(app.exec())
+    elif args.headless or args.url:
+        settings = Settings()
+        if args.config and Path(args.config).exists():
+            with open(args.config) as f:
+                config_data = json.load(f)
+                settings = Settings.from_dict(config_data)  # you'd implement this in settings.py
+        
+        if args.url:
+            settings.seed_urls = [args.url]
+        if args.output:
+            settings.output_dir = args.output
 
-    if args.headless or args.url:
-        if not settings.seed_urls:
-            parser.error("--url is required in headless mode or when URLs are provided")
-        run_headless(settings)
+        async def run():
+            crawler = UnifiedAsyncCrawler(settings)
+            await crawler.start()
+        asyncio.run(run())
     else:
-        run_gui(settings)
+        # Default: try GUI if available, else headless help
+        if GUI_AVAILABLE:
+            app = QApplication(sys.argv)
+            window = MainWindow()
+            window.show()
+            sys.exit(app.exec())
+        else:
+            parser.print_help()
 
 
 if __name__ == "__main__":
